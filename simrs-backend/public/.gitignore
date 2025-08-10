@@ -1,0 +1,6 @@
+# Ignore config files
+.gitconfig
+.gitignore_global
+node_modules
+.env
+*.log
