@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dashboard SIMRS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { width: 250px; height: 100vh; background: #343a40; color: white; position: fixed; }
+        .sidebar-header { padding: 20px; font-weight: bold; }
+        .sidebar-menu a { color: #ddd; padding: 15px 20px; display: block; text-decoration: none; }
+        .sidebar-menu a:hover { background: #495057; }
+        .main { margin-left: 250px; padding: 30px; }
+        .card { border-radius: 10px; }
+        .table { background: white; }
+        .form-container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">SIMRS</div>
+        <div class="sidebar-menu">
+            <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
+            <a href="#" onclick="showPage('pasien')"><i class="bi bi-person"></i> Pasien</a>
+            <a href="#"><i class="bi bi-people"></i> Dokter</a>
+            <a href="#"><i class="bi bi-calendar"></i> Jadwal</a>
+            <a href="#"><i class="bi bi-file-earmark-text"></i> Rekam Medis</a>
+            <a href="#"><i class="bi bi-wallet"></i> Billing</a>
+            <a href="#"><i class="bi bi-capsule"></i> Farmasi</a>
+            <a href="#"><i class="bi bi-flask"></i> Laboratorium</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h2>Dashboard SIMRS</h2>
+        <p>Selamat datang, <strong id="namaUser">User</strong>! <button class="btn btn-sm btn-danger" onclick="logout()">Keluar</button></p>
+
+        <!-- Dashboard Stats -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 id="totalPasien">0</h5>
+                        <p>Pasien Hari Ini</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5>Rp 24.500.000</h5>
+                        <p>Pendapatan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Halaman Pasien -->
+        <div id="pasienPage" style="display: none;">
+            <h3 class="mt-5">📁 Manajemen Pasien</h3>
+
+            <!-- Form Tambah Pasien -->
+            <div class="form-container">
+                <h5>Tambah Pasien Baru</h5>
+                <form id="formPasien">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="nomor_rm" placeholder="Nomor RM" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="nama" placeholder="Nama Lengkap" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <select class="form-control" id="jenis_kelamin" required>
+                                <option value="">Jenis Kelamin</option>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="date" class="form-control" id="tanggal_lahir" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="alamat" placeholder="Alamat">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="no_telepon" placeholder="No Telepon">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Simpan Pasien</button>
+                </form>
+            </div>
+
+            <!-- Tabel Daftar Pasien -->
+            <h5>Daftar Pasien</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>RM</th>
+                        <th>Nama</th>
+                        <th>JK</th>
+                        <th>Tgl Lahir</th>
+                        <th>No HP</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelPasien">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!token || !user) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('namaUser').textContent = user.nama;
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function showPage(page) {
+            document.getElementById('pasienPage').style.display = page === 'pasien' ? 'block' : 'none';
+            if (page === 'pasien') loadPasien();
+        }
+
+        document.getElementById('formPasien').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                nomor_rm: document.getElementById('nomor_rm').value,
+                nama: document.getElementById('nama').value,
+                jenis_kelamin: document.getElementById('jenis_kelamin').value,
+                tanggal_lahir: document.getElementById('tanggal_lahir').value,
+                alamat: document.getElementById('alamat').value,
+                no_telepon: document.getElementById('no_telepon').value
+            };
+
+            try {
+                const res = await fetch('https://00ba702097dd74.lhr.life/api/pasien', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    alert('Pasien berhasil ditambahkan');
+                    document.getElementById('formPasien').reset();
+                    loadPasien();
+                } else {
+                    alert('Gagal tambah pasien');
+                }
+            } catch (err) {
+                alert('Kesalahan: ' + err.message);
+            }
+        });
+
+        async function loadPasien() {
+            try {
+                const res = await fetch('https://00ba702097dd74.lhr.life/api/pasien');
+                const pasien = await res.json();
+                const tbody = document.getElementById('tabelPasien');
+                tbody.innerHTML = '';
+
+                pasien.forEach(p => {
+                    const tr = `<tr>
+                        <td>${p.nomor_rm}</td>
+                        <td>${p.nama}</td>
+                        <td>${p.jenis_kelamin}</td>
+                        <td>${p.tanggal_lahir}</td>
+                        <td>${p.no_telepon}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning">Edit</button>
+                            <button class="btn btn-sm btn-danger">Hapus</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += tr;
+                });
+
+                document.getElementById('totalPasien').textContent = pasien.length;
+            } catch (err) {
+                console.error('Gagal muat pasien:', err);
+            }
+        }
+    </script>
+</body>
+</html>
