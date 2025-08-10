@@ -148,7 +148,7 @@
             };
 
             try {
-                const res = await fetch('http://localhost:5000/api/pasien', {
+                const res = await fetch('https://00ba702097dd74.lhr.life/api/pasien', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -171,7 +171,7 @@
 
         async function loadPasien() {
             try {
-                const res = await fetch('http://localhost:5000/api/pasien');
+                const res = await fetch('https://00ba702097dd74.lhr.life/api/pasien');
                 const pasien = await res.json();
                 const tbody = document.getElementById('tabelPasien');
                 tbody.innerHTML = '';
